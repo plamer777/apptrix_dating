@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 from pydantic import BaseSettings
 # --------------------------------------------------------------------------
@@ -25,10 +25,15 @@ class EnvSettings(BaseSettings):
     POSTGRES_PORT: int
     POSTGRES_HOST: str
     SECRET_KEY: str
-    DEBUG: bool
-    TITLE: str
-    DESCRIPTION: str
-    VERSION: str
+    EMAIL_USE_TLS: bool
+    EMAIL_HOST: str
+    EMAIL_HOST_USER: str
+    EMAIL_HOST_PASSWORD: str
+    EMAIL_PORT: int
+    DEBUG: bool = True
+    TITLE: str = 'Test title'
+    DESCRIPTION: str = 'Test description'
+    VERSION: str = '1.0.0'
 
     class Config:
         env_file = Path.joinpath(BASE_DIR, '.env')
@@ -126,6 +131,10 @@ SPECTACULAR_SETTINGS = {
     'VERSION': env_sets.VERSION,
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30)
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -169,7 +178,7 @@ STATIC_URL = 'static/'
 MEDIA_URL = 'images/'
 
 MEDIA_ROOT = Path.joinpath(BASE_DIR, 'images')
-AVA_ROOT = Path.joinpath(MEDIA_ROOT, 'ava')
+AVA_ROOT = 'ava'
 WATERMARK_IMAGE = Path.joinpath(MEDIA_ROOT, 'watermark2.png')
 
 # Default primary key field type
@@ -180,3 +189,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 APPEND_SLASH = True
 
 AUTH_USER_MODEL = 'core.User'
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_USE_TLS = env_sets.EMAIL_USE_TLS
+EMAIL_HOST = env_sets.EMAIL_HOST
+EMAIL_HOST_USER = env_sets.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = env_sets.EMAIL_HOST_PASSWORD
+EMAIL_PORT = env_sets.EMAIL_PORT
+
+MESSAGE_TEMPLATE = 'Вы понравились {0}! Почта участника: {1}'
+MESSAGE_SUBJECT = 'Уведомление о взаимной симпатии'

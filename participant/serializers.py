@@ -2,7 +2,7 @@
 from django.db import transaction
 from rest_framework import serializers
 from participant.models import Client
-from utils import create_user
+from utils import create_user, get_ava_with_watermark
 # -------------------------------------------------------------------------
 
 
@@ -14,7 +14,7 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Client
-        exclude = ['user']
+        exclude = ['user', 'favorites']
 
     def validate(self, attrs: dict) -> dict:
         password = attrs.get('password')
@@ -46,9 +46,21 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
                 validated_data['user_id'] = user.pk
                 validated_data.pop('username', None)
                 validated_data.pop('password', None)
+                if validated_data.get('ava'):
+                    validated_data['ava'] = get_ava_with_watermark(
+                        validated_data.get('ava'))
                 return super().create(validated_data)
 
         except Exception as e:
             raise serializers.ValidationError({
                 'error': f'cannot create user, the error: {e}'
             })
+
+
+class ClientUpdateSerializer(serializers.ModelSerializer):
+    """This serializer serves to update a client favorites attribute"""
+    email = serializers.EmailField(read_only=True)
+
+    class Meta:
+        model = Client
+        fields = ['email']

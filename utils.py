@@ -1,8 +1,11 @@
 """This file contains utility functions"""
+from string import ascii_lowercase, digits
+from random import sample
 from io import BytesIO
 from PIL import Image
 from django.conf import settings
 from django.core.files import File
+from django.core.mail import send_mail
 from django.db.models.fields.files import ImageFieldFile
 from core.models import User
 # --------------------------------------------------------------------------
@@ -15,7 +18,9 @@ def get_user_ava_path(
     :param filename: a string representing the name of the image file
     :return: a string representing the path for the user avatar image
     """
-    return f'{settings.AVA_ROOT}/{instance.email}/{filename}'
+    ava_name = ''.join(sample(ascii_lowercase+digits, 15))
+    ava_extension = filename.split('.')[-1]
+    return f'{settings.AVA_ROOT}/{instance.email}/{ava_name}.{ava_extension}'
 
 
 def create_user(data: dict) -> User:
@@ -46,5 +51,28 @@ def get_ava_with_watermark(avatar: ImageFieldFile) -> File:
         mask=watermark)
 
     ava.save(ava_io, 'JPEG')
+    watermark.close()
+    ava.close()
 
     return File(ava_io, avatar.name)
+
+
+def send_message(
+        client_from: 'participant.Client', client_to: 'participant.Client',
+        email_from: str = settings.EMAIL_HOST_USER,
+        subject: str = settings.MESSAGE_SUBJECT,
+        template: str = settings.MESSAGE_TEMPLATE,
+) -> int:
+    """This function sends a message to the user email addresses by provided
+    template
+    :param client_from: a Client instance to send the message from
+    :param client_to: a Client instance to send the message to
+    :param email_from: the email address of SMTP host
+    :param subject: the subject of the email message
+    :param template: the template of the email message
+    """
+    message = template.format(
+        client_from.first_name, client_from.email)
+    return send_mail(
+        subject, message, email_from, recipient_list=[client_to.email])
+

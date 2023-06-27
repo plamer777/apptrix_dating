@@ -17,6 +17,7 @@ class Client(models.Model):
     gender = models.SmallIntegerField(choices=Gender.choices)
     first_name = models.CharField(max_length=30, blank=True, null=True)
     last_name = models.CharField(max_length=30, blank=True, null=True)
+    favorites = models.ManyToManyField('self', symmetrical=False)
 
     class Meta:
         verbose_name = 'Клиент'
@@ -24,7 +25,3 @@ class Client(models.Model):
 
     def __str__(self) -> str:
         return f'Client({self.email}, {self.first_name}, {self.gender})'
-
-    def save(self, *args, **kwargs) -> None:
-        self.ava = get_ava_with_watermark(self.ava)
-        return super().save(*args, **kwargs)

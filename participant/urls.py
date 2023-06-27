@@ -9,4 +9,5 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()),
     path('create/', views.CreateClientView.as_view()),
+    path('<int:favorite_id>/match/', views.UpdateClientView.as_view()),
 ]
