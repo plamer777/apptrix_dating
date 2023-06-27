@@ -64,3 +64,11 @@ class ClientUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         fields = ['email']
+
+
+class ClientListSerializer(serializers.ModelSerializer):
+    """This serializer serves to get a list of clients"""
+
+    class Meta:
+        model = Client
+        fields = '__all__'
