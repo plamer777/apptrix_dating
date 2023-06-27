@@ -1,10 +1,11 @@
+"""The file contains a Client model representing client table of the database"""
 from django.db import models
 from utils import get_user_ava_path
 # ---------------------------------------------------------------------------
 
 
 class Client(models.Model):
-
+    """The Client model contains all necessary fields"""
     class Gender(models.IntegerChoices):
         man = (1, 'Мужчина')
         woman = (2, 'Женщина')
@@ -21,6 +22,6 @@ class Client(models.Model):
         verbose_name = 'Клиент'
         verbose_name_plural = 'Клиенты'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Client({self.email}, {self.first_name}, {self.gender})'
 
