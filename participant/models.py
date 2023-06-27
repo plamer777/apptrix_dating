@@ -1,6 +1,6 @@
 """The file contains a Client model representing client table of the database"""
 from django.db import models
-from utils import get_user_ava_path
+from utils import get_user_ava_path, get_ava_with_watermark
 # ---------------------------------------------------------------------------
 
 
@@ -25,3 +25,6 @@ class Client(models.Model):
     def __str__(self) -> str:
         return f'Client({self.email}, {self.first_name}, {self.gender})'
 
+    def save(self, *args, **kwargs) -> None:
+        self.ava = get_ava_with_watermark(self.ava)
+        return super().save(*args, **kwargs)

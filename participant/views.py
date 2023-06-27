@@ -10,4 +10,3 @@ class CreateClientView(CreateAPIView):
     """This CBV serves to add new client to the database"""
     queryset = Client.objects.all()
     serializer_class = ClientRegisterSerializer
-

@@ -1,7 +1,8 @@
 """This file contains serializers for Client model"""
+from django.db import transaction
 from rest_framework import serializers
 from participant.models import Client
-from core.models import User
+from utils import create_user
 # -------------------------------------------------------------------------
 
 
@@ -39,20 +40,15 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data: dict) -> Client:
-        user_data = validated_data.copy()
-
-        user_data.pop('password_repeat', None)
-        user_data.pop('gender', None)
-
         try:
-            user = User.objects.create_user(**user_data)
+            with transaction.atomic():
+                user = create_user(validated_data)
+                validated_data['user_id'] = user.pk
+                validated_data.pop('username', None)
+                validated_data.pop('password', None)
+                return super().create(validated_data)
+
         except Exception as e:
             raise serializers.ValidationError({
                 'error': f'cannot create user, the error: {e}'
             })
-
-        validated_data['user_id'] = user.pk
-        validated_data.pop('username', None)
-        validated_data.pop('password', None)
-
-        return super().create(validated_data)

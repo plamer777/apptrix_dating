@@ -169,6 +169,8 @@ STATIC_URL = 'static/'
 MEDIA_URL = 'images/'
 
 MEDIA_ROOT = Path.joinpath(BASE_DIR, 'images')
+AVA_ROOT = Path.joinpath(MEDIA_ROOT, 'ava')
+WATERMARK_IMAGE = Path.joinpath(MEDIA_ROOT, 'watermark2.png')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
