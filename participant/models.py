@@ -18,10 +18,13 @@ class Client(models.Model):
     first_name = models.CharField(max_length=30, blank=True, null=True)
     last_name = models.CharField(max_length=30, blank=True, null=True)
     favorites = models.ManyToManyField('self', symmetrical=False)
+    lat = models.FloatField(null=True, blank=True)
+    lon = models.FloatField(null=True, blank=True)
+    distance = models.FloatField(null=True, blank=True)
 
     class Meta:
         verbose_name = 'Клиент'
         verbose_name_plural = 'Клиенты'
 
     def __str__(self) -> str:
-        return f'Client({self.email}, {self.first_name}, {self.gender})'
+        return f'Клиент({self.email}, {self.first_name}, {self.gender})'

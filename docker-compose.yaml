@@ -3,8 +3,8 @@ services:
 
   db:
     image: postgres:alpine
-    ports:
-      - "5432:5432"
+    expose:
+      - $POSTGRES_PORT
     env_file:
       - .env
     volumes:
@@ -17,5 +17,45 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    image: plamer88/apptrix_dating:api-01
+    env_file:
+      - .env
+    expose:
+      - 5000
+    volumes:
+      - static_files:/apptrix_dating/static
+      - media_files:/apptrix_dating/images
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+
+  migrations:
+    image: plamer88/apptrix_dating:api-01
+    env_file:
+      - .env
+    volumes:
+      - static_files:/digital_market/static
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c './manage.py makemigrations && ./manage.py migrate'
+
+  nginx:
+    image: nginx:alpine
+
+    depends_on:
+      api:
+        condition: service_started
+    volumes:
+      - static_files:/usr/share/nginx/html/static
+      - media_files:/usr/share/nginx/html/images
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - '80:3000'
+
 volumes:
   postgres_data:
+  static_files:
+  media_files:

@@ -11,12 +11,18 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=False, max_length=30)
     password = serializers.CharField(min_length=7, max_length=30)
     password_repeat = serializers.CharField(min_length=7, max_length=30)
+    lat = serializers.FloatField(
+        required=False, min_value=-90.0, max_value=90.0)
+    lon = serializers.FloatField(
+        required=False, min_value=-180.0, max_value=180.0)
 
     class Meta:
         model = Client
-        exclude = ['user', 'favorites']
+        exclude = ['user', 'favorites', 'distance']
 
     def validate(self, attrs: dict) -> dict:
+        """This method validates user passwords during registration process
+        and creates a username if it was not provided"""
         password = attrs.get('password')
         password_repeat = attrs.get('password_repeat')
         username = attrs.get('username')
@@ -40,6 +46,10 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data: dict) -> Client:
+        """This method serves to create a user model together with the client
+        model
+        :return: the created client model
+        """
         try:
             with transaction.atomic():
                 user = create_user(validated_data)
@@ -71,4 +81,4 @@ class ClientListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Client
-        fields = '__all__'
+        exclude = ['distance']

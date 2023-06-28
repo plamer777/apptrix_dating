@@ -2,6 +2,7 @@
 client table of the database"""
 from django.db.models import QuerySet
 from django.http import JsonResponse
+from haversine import haversine
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
@@ -25,14 +26,26 @@ class UpdateClientView(UpdateAPIView):
     serializer_class = ClientUpdateSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self) -> QuerySet:
+    def get_queryset(self) -> QuerySet[Client]:
+        """This method was rewritten to return a queryset only for current
+        client
+        :return: a QuerySet object
+        """
         queryset = Client.objects.filter(email=self.request.user.email)
         return queryset
 
     def get_object(self) -> Client:
+        """This method returns the client object for the current user
+        :return: a Client object
+        """
         return Client.objects.get(email=self.request.user.email)
 
-    def partial_update(self, request, *args, **kwargs) -> JsonResponse:
+    def update(self, request, *args, **kwargs) -> JsonResponse:
+        """This method adds a new client to the favorites of the current client
+        and sends emails if the clients have mutual sympathy
+        :return: a JsonResponse object with the message containing the result
+        of the operation or favorite email if sympathy was mutual
+        """
         current_client = Client.objects.get(email=self.request.user.email)
         favorite = Client.objects.filter(pk=self.kwargs.get(
             'favorite_id')).first()
@@ -44,12 +57,13 @@ class UpdateClientView(UpdateAPIView):
                 {'message': 'You cannot add yourself as a favorite'})
 
         current_client.favorites.add(favorite)
-        super().partial_update(request, *args, **kwargs)
+        super().update(request, *args, **kwargs)
 
         if favorite.favorites.filter(pk=current_client.pk).exists():
             send_message(current_client, favorite)
             send_message(favorite, current_client)
-            return JsonResponse({'favorite_email': favorite.email})
+            serializer = self.get_serializer_class()
+            return JsonResponse(serializer(favorite).data)
 
         return JsonResponse({'message': 'Favorite added successfully'})
 
@@ -61,3 +75,29 @@ class ClientListView(ListAPIView):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ClientListFilter
+
+    def get_object(self) -> Client:
+        """This method returns the client object for the current user
+        :return: a Client object
+        """
+        return Client.objects.get(user=self.request.user)
+
+    def get_queryset(self) -> QuerySet[Client]:
+        """This method was rewritten to calculate a distance between current
+        client and a list of all clients
+        :return: a QuerySet of all clients
+        """
+        current_client = self.get_object()
+        queryset = Client.objects.all()
+
+        for client in queryset:
+            try:
+                client.distance = haversine(
+                    (client.lat, client.lon),
+                    (current_client.lat, current_client.lon))
+            except Exception:
+                client.distance = None
+
+            client.save()
+
+        return queryset
