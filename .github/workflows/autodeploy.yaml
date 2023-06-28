@@ -12,7 +12,7 @@ jobs:
           host: ${{secrets.HOST}}
           username: ${{secrets.USERNAME}}
           password: ${{secrets.PASSWORD}}
-          source: 'docker-compose.yaml,images'
+          source: 'docker-compose.yaml,images,nginx.conf'
           target: '/home/apptrix_dating'
       - name: run application
         uses: appleboy/ssh-action@master
